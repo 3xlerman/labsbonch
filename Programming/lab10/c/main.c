@@ -1,3 +1,14 @@
+// RUS Массив содержит сведения о книгах.
+// Каждая структура имеет следующие поля:
+// автор (авторы), название, год издания, цена и издательство.
+// Вывести на экран дисплея список книг,
+// изданных в заданном временном интервале.
+
+// ENG An array contains information about books.
+// Every structure has these fields:
+// author (authors), title, year of publishing, price and publishing office.
+// Print a book list, published in entered time interval.
+
 #include <stdio.h>
 
 #define n 5
