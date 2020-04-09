@@ -49,7 +49,7 @@ func search() {
 	fmt.Scan(&b1)
 	fmt.Print("Enter second year bound: ")
 	fmt.Scan(&b2)
-	for i := 0; i < semyon; i++ {
+	for i := 0; i < semyon; i++ {							// searching books in time interval
 		if books[i].Year >= b1 && books[i].Year <= b2 {
 			fmt.Println(books[i].Title)
 		}

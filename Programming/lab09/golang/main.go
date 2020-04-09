@@ -28,7 +28,7 @@ func main() {
 		divide()
 		deleter()
 		for j := 0; j <= spaceC; j++ {
-			if j%2 == 0 {
+			if j%2 == 0 {						// printing words with even numbers
 				fmt.Print(words[j], " ")
 			}
 		}
@@ -38,16 +38,16 @@ func main() {
 }
 
 func input() {
-	fmt.Print("Введите количество строк: ")
+	fmt.Print("Enter number of strokes: ")
 	fmt.Scan(&n)
 	if n > 20 {
-		fmt.Print("Допустимый лимит - 20 строк!")
+		fmt.Print("Out of bounds (20)!")
 		os.Exit(1)
 	} else {
 		for i := 0; i < n; i++ {
-			str[i], _ = bufio.NewReader(os.Stdin).ReadString('\n')
+			str[i], _ = bufio.NewReader(os.Stdin).ReadString('\n')		// reading stroke until '/n'
 			if len(str[i]) > 128 {
-				fmt.Println("Допустимый лимит - 128 символов!")
+				fmt.Println("Out of bounds (128)!")
 				os.Exit(1)
 			}
 		}
@@ -58,14 +58,14 @@ func divide() {
 	spaceC = -1
 	l = len(str[i])
 	for j := 0; j < l; j++ {
-		if string(str[i][j]) == " " {
+		if string(str[i][j]) == " " {		// dividing a stroke in words
 			spaceC++
 			words[spaceC] = str[i][0:j]
 			str[i] = str[i][j+1:]
 			l = len(str[i])
 			j = 0
 		}
-		if string(str[i][j]) == "\n" {
+		if string(str[i][j]) == "\n" {		// adding last word in array of words
 			spaceC++
 			words[spaceC] = str[i][0:j]
 			str[i] = ""
@@ -75,7 +75,7 @@ func divide() {
 }
 
 func deleter() {
-	for j := 0; j <= spaceC; j++ {
+	for j := 0; j <= spaceC; j++ {			// deleting extra-spaces
 		if words[j] == " " {
 			for w := j; w < spaceC; w++ {
 				words[w] = words[w+1]
