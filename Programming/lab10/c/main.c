@@ -47,7 +47,7 @@ void search() {
     printf("Enter second year bound: ");
     scanf("%d", &b2);
     for (int i = 0; i < n; i++) {
-        if (book[i].Year >= b1 && book[i].Year <= b2)
+        if (book[i].Year >= b1 && book[i].Year <= b2)       // searching books in time interval
             printf("%s", book[i].Title, "\n");
     }
 }
