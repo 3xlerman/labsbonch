@@ -8,23 +8,20 @@ import (
 var (
 	enter int
 	str   [50]string
-	words [10]string
+	words [50][10]string
 	data  []byte
 )
 
 func main() {
-	data, _ = ioutil.ReadFile("numbers.txt")
+	input()
 	divideToStrings()
-	//divideToWords()
+	divideToWords()
 	output()
 }
 
-func output() {
-	for i := 0; i < enter; i++ {
-		fmt.Println(str[i])
-	}
+func input() {
+	data, _ = ioutil.ReadFile("numbers.txt")
 }
-
 func divideToStrings() {
 	enter = 0
 	for i := 0; i < len(data); i++ {
@@ -37,25 +34,25 @@ func divideToStrings() {
 	str[enter] = string(data)
 	enter++
 }
-
 func divideToWords() {
-	spaceC := -1
 	for i := 0; i < enter; i++ {
-		l := len(str[i])
+		wordsC := 0
+		l := len(str[enter])
 		for j := 0; j < l; j++ {
-			if string(str[i][j]) == " " { // dividing a stroke in words
-				spaceC++
-				words[spaceC] = str[i][0:j]
+			if string(str[i][j]) == " " {
+				words[i][wordsC] = str[i][:j]
 				str[i] = str[i][j+1:]
-				l = len(str[i])
+				wordsC++
+				fmt.Println(words[i][wordsC])
 				j = 0
+				l = len(str[enter])
 			}
-			if string(str[i][j]) == "\n" { // adding last word in array of words
-				spaceC++
-				words[spaceC] = str[i][0:j]
-				str[i] = ""
-			}
+
 		}
 	}
-
+}
+func output() {
+	for i := 0; i < enter; i++ {
+		fmt.Println(str[i])
+	}
 }

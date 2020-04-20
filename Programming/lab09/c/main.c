@@ -11,48 +11,69 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #define row 20
 #define pos 128
 
-int n, i, spaceC, wordsC, l, space1, space2;
-char str[row][pos], words[65][65];
+int n, i, wordC, space1;
+char str[row][pos], words[row][65][65];
 
 void input() {
-    printf("Enter number of strokes: ");
+    printf("Number of strokes: ");
     scanf("%d", &n);
     if (n > 20) {
-        printf("Out of bounds (20 strokes)!");
+        printf("Out of bounds (20)!");
         exit(1);
-    } else {
-        fgets(str[0], pos, stdin);
-        for (i = 0; i < n; i++) {
-            fgets(str[i], pos, stdin);
+    }
+    fgets(str[0], pos, stdin);
+    printf("Enter strings: \n");
+    for (i = 0; i < n; i++) {
+        fgets(str[i], pos, stdin);
+    }
+}
+
+void wordsDivider() {
+    for (i = 0; i < n; i++) {
+        wordC = 0;
+        space1 = 0;
+        for (int j = 0; j < strlen(str[i]); j++) {
+            if (isspace(str[i][j]) || str[i][j] == '\0') {
+                if (j - space1 > 1) {
+                    int c1 = 0;
+                    for (int c = space1; c < j; c++) {
+                        words[i][wordC][c1] = str[i][c];
+                        c1++;
+                    }
+                    space1 = j + 1;
+                    wordC++;
+                } else {
+                    space1 = j + 1;
+                }
+
+            }
+        }
+
+    }
+}
+
+void finalOutput() {
+    for (i = 0; i < n; i++) {
+        for (int j = 0; j < wordC; j++) {
+            if (j % 2 == 0) {
+                for (int c1 = 0; c1 < strlen(words[i][j]); c1++) {
+                    printf("%c", words[i][j][c1]);
+                }
+                printf(" ");
+            }
         }
         printf("\n");
     }
 }
 
-void divide() {
-    int j = 0;
-    wordsC = 0;
-    while (j < strlen(str[i])) {
-        if (str[i][j] != ' ') {
-            words[wordsC][j] = str[i][j];
-        } else {
-            wordsC++;
-            j++;
-        }
-    }
-
-}
-
 int main() {
-    spaceC = 0;
     input();
-    for (i = 0; i < row; i++) {
-        divide();
-    }
-    //output();
+    wordsDivider();
+    finalOutput();
     return 0;
 }
