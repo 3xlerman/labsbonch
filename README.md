@@ -7,7 +7,8 @@
 ### Languages used
 * Golang (my learning practice)
 * C
+* C++
 
 
 Tracking projects since _**08 April 2020**_
-#####Enjoy.
+##### Enjoy.
