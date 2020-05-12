@@ -3,99 +3,220 @@ package main
 import (
 	"fmt"
 	"math"
+	"os"
+	"strings"
 )
 
-const P = 100
+const (
+	// L = lines
+	L = 100
 
-type line struct { // объявляем структуру с данными о каждой строке в системе
-	Power [P]int // максимальная степень каждой переменной x(0)-x(n)
-	X     [P][100]float64 // массив коэффициентов для каждой переменной вплоть до 100-й степени
-	D     [P][100]float64 // массив коэфициентов производной для каждой переменной
-}
+	// A = assignments
+	A = 100
+
+	// P = powers
+	P = 100
+)
 
 var (
-	xvalue      [P]float64 // входные значения Х
-	stroke      [P]line // поддержка до P строк в системе
-	n, iter     int // кол-во строк и кол-во итераций
-	grad        [P]float64 // массив для хранения градиентов для каждой переменной
-	step, bound float64 // шаг градиентного спуска и поиск наиболее точного значения
-	xmin        [P]float64 // хранение аргументов, при которых достигнуто наиболее точное значение функции
+	// number of lines and assignments
+	lineN, perN int
+
+	// maximum power of every assign in every stroke
+	maxP [L][A]int
+
+	// F factors array
+	F [L][A][P]float64
+
+	// D derivative factors array
+	D [L][A][P]float64
+
+	// array of values
+	values [A]float64
+
+	// array of minimum values
+	valuesMin [A]float64
+
+	// array of gradient values
+	grad [A]float64
+
+	// epsilon
+	epsilon float64
 )
 
-func input() { // функция ввода коэффициентов системы
+// detecting error type
+func errCheck(err error) bool {
+	if err != nil {
+		if strings.Contains(err.Error(), "expected integer") {
+			fmt.Print("Неверный тип данных")
+		}
+		if strings.Contains(err.Error(), "value out of range") {
+			fmt.Print("Выход за границы диапазона")
+		}
+		if strings.Contains(err.Error(), "invalid syntax") {
+			fmt.Print("Неверный тип данных")
+		}
+		return true
+	}
+	return false
+}
+
+// const numbers input
+func inputNumbers() {
 	fmt.Print("Количество строк в системе: ")
-	fmt.Scan(&n)
-	for str := 0; str < n; str++ {
-		fmt.Print("Строка ", str+1, "\n")
-		for per := 0; per < n; per++ {
-			fmt.Print("Переменная x[", per, "]\n")
-			fmt.Print("Высшая степень переменной x[", per, "]: ")
-			fmt.Scan(&stroke[str].Power[per])
-			for k := stroke[str].Power[per]; k >= 0; k-- {
-				fmt.Print("Введите коэффициент степени ", k, " = ")
-				fmt.Scan(&stroke[str].X[per][k])
+	_, err := fmt.Scan(&lineN)
+	if errCheck(err) {
+		fmt.Println("\nОшибка в вводе количества строк")
+		os.Exit(1)
+	}
+
+	fmt.Print("Количество переменных в системе: ")
+	_, err = fmt.Scan(&perN)
+	if errCheck(err) {
+		fmt.Println("Ошибка в вводе количества переменных")
+		os.Exit(1)
+	}
+
+	if lineN < perN {
+		fmt.Print("Система неразрешима")
+		os.Exit(1)
+	}
+
+}
+
+// system factors input
+func inputFactors() {
+	for i := 0; i < lineN; i++ {
+		fmt.Print("### Строка ", i+1, ": ###\n")
+		for j := 0; j < perN; j++ {
+
+			fmt.Print("Переменная x[", j, "]:\n")
+			fmt.Print("Высшая степень x[", j, "]: ")
+
+			_, err := fmt.Scan(&maxP[i][j])
+			if errCheck(err) {
+				fmt.Println("Ошибка в вводе высшей степени переменной x[", j, "]")
+				os.Exit(1)
+			}
+
+			for k := maxP[i][j]; k >= 0; k-- {
+
+				fmt.Print("Введите коэффициент при степени ", k, ": ")
+
+				_, err = fmt.Scan(&F[i][j][k])
+				if errCheck(err) {
+					fmt.Println("Ошибка в вводе коэффициента ", k, " степени переменной x[", j, "]")
+					os.Exit(1)
+				}
+
 			}
 		}
 	}
 }
-func derivative() { // функция, вычисляющая коэффициенты в функции производной
-	for str := 0; str < n; str++ {
-		for per := 0; per < n; per++ {
-			for k := 0; k < stroke[str].Power[per]; k++ {
-				stroke[str].D[per][k] = stroke[str].X[per][k+1] * float64(k+1) // сохраняем коэффициенты в отдельный массив
+
+// init valuse input
+func inputValues() {
+	fmt.Print("### Ввод начальных значений ###\n")
+	for j := 0; j < perN; j++ {
+		fmt.Print("Начальное значение переменной x[", j, "]= ")
+		_, err := fmt.Scan(&values[j])
+		if errCheck(err) {
+			fmt.Println("Ошибка в вводе начальных значений")
+			os.Exit(1)
+		}
+	}
+	// user bound input
+	fmt.Print("### Ввод порога сходимости (epsilon) ###\n")
+	_, err := fmt.Scan(&epsilon)
+	if errCheck(err) {
+		fmt.Println("Ошибка в вводе порога")
+		os.Exit(1)
+	}
+}
+
+// group input functions in big one
+func input() {
+	inputNumbers()
+	inputFactors()
+	inputValues()
+}
+
+// create derivative factors of every stroke
+func derivative() {
+	for i := 0; i < lineN; i++ {
+		for j := 0; j < perN; j++ {
+			for k := 0; k < maxP[i][j]; k++ {
+				D[i][j][k] = F[i][j][k+1] * float64(k+1)
 			}
 		}
 	}
 }
-func solvePolinom(x float64, s [P][100]float64, per int, hpower int) float64 { // функция, находящая значение полинома при входном значении Х
-	res := 0.0
-	for k := hpower; k >= 0; k-- {
-		res = res*x + s[per][k]
+
+// solving a polinom, derivative or not
+func solve(res float64, x float64, mas [L][A][P]float64, i int, j int, power int) float64 {
+	for k := power; k >= 0; k-- {
+		res = res*x + mas[i][j][k]
 	}
 	return res
 }
-func output(xvalue [P]float64, n int) { // функция вывода значения Ф(Х)
-	sum := 0.0
-	for per := 0; per < n; per++ {
-		for str := 0; str < n; str++ {
-			sum += math.Pow(solvePolinom(xvalue[per], stroke[str].X, per, stroke[str].Power[per]), 2)
-		}
-	}
-	fmt.Print("Ф(Х)= ")
-	fmt.Printf("%.5f\n", sum)
-	if sum < bound { // если значение ниже минимального ранее
-		for per := 0; per < n; per++ {
-			xmin[per] = xvalue[per] // также запоминаем аргументы, при которых находим такое значение
-		}
-		bound = sum // данное значение становится минимальным
-	}
 
+// calculating gradient for every assignment
+func gradient(sum float64, x float64, j int) float64 {
+	for i := 0; i < lineN; i++ {
+		fmt.Println("................................х:", x)
+		sum = sum + 2*solve(0, x, F, i, j, maxP[i][j])*solve(0, x, D, i, j, maxP[i][j]-1)
+	}
+	return sum
 }
-func main() {
-	bound = 100 // задаём минимум достаточно большим
-	input() // ввод данных
-	derivative() // нахождение коэффициентов производных для каждой переменной в каждой строке
-	for per := 0; per < n; per++ {
-		fmt.Print("Начальное значение переменной x[", per, "]: ")
-		fmt.Scan(&xvalue[per])
-	}
 
-	fmt.Print("Введите шаг градиентного спуска: ")
-	fmt.Scan(&step)
-	fmt.Print("Введите количество итераций: ")
-	fmt.Scan(&iter)
-	for i := 0; i < iter; i++ {
-		for per := 0; per < n; per++ {
-			for str := 0; str < n; str++ { // нахоидим градиент по каждой переменной в Ф(Х)
-				grad[per] = grad[per] + 2*solvePolinom(xvalue[per], stroke[str].X, per, stroke[str].Power[per])*solvePolinom(xvalue[per], stroke[str].D, per, stroke[str].Power[per]-1)
-			}
-			xvalue[per] = xvalue[per] - step*grad[per] // спускаемся
+// final output Ф(x)
+func builder(sum float64, bound float64) (result float64, resultMin float64) {
+	for j := 0; j < perN; j++ {
+		for i := 0; i < lineN; i++ {
+			sum = sum + math.Pow(solve(0, values[j], F, i, j, maxP[i][j]), 2)
 		}
-		output(xvalue, n) // выводим значение Ф(Х)
 	}
-	fmt.Print("Наиболее точное решение Ф(Х)= ")
-	fmt.Printf("%.5f%s\n", bound, " при значениях Х: ")
-	for per := 0; per < n; per++ { // выводим все аргументы в системе
-		fmt.Println("x[", per, "]= ", xmin[per])
+	fmt.Println("Ф(Х)= ", sum)
+	if sum < bound {
+		bound = sum
+		for j := 0; j < perN; j++ {
+			valuesMin[j] = values[j]
+		}
+	}
+	return sum, bound
+}
+
+func main() {
+	input()
+	derivative()
+
+	// step of descent
+	step := 0.0001
+	bound := 10000000000000.01
+
+	var result, prevResult float64
+	for {
+		for j := 0; j < perN; j++ {
+			grad[j] = gradient(0, values[j], j)
+		}
+		for j := 0; j < perN; j++ {
+			values[j] = values[j] - step*grad[j]/float64(perN)
+		}
+		prevResult = result
+		result, bound = builder(0, bound)
+		// if step(n) - step(n-1) < epsilon: exit
+		if math.Abs(result-prevResult) < epsilon {
+			break
+		}
+		if result > bound {
+			fmt.Println("Градиент не сходится")
+			break
+		}
+
+	}
+	// output result and x values
+	fmt.Print("Ф(Х)= ", bound, "\n")
+	for j := 0; j < perN; j++ {
+		fmt.Print("x[", j, "]= ", valuesMin[j])
 	}
 }
