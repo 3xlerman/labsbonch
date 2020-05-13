@@ -3,6 +3,7 @@
 * Programming
 * Algorithmic foundations of software engineering
 * ~~Machine-dependent programming languages~~ **_(soon)_**
+* Introduction in Software Engeneering
 
 ### Languages used
 * Golang (my learning practice)
