@@ -1,36 +1,46 @@
 #include <stdio.h>
 
-int main(void) {
-    FILE *mf;
-    char str[50];
-    char *estr;
-    printf("Opening file...");
-    mf = fopen("/home/lerman/Projects/Programming/lab11/c/numbers.txt", "r");
+int main() {
+    int row = 0, column = 0;
 
-    if (mf == NULL) {
-        printf("Error1\n");
-        return -1;
-    } else printf("Completed\n");
+    FILE *file_numbers, *file_result;
+    char *filename_numbers = "numbers.txt";
+    char *filename_result = "result.txt";
 
-    printf("String readed:\n");
-    while (1) {
-        estr = fgets(str, sizeof(str), mf);
+    // чтение из файла
+    if ((file_numbers = fopen(filename_numbers, "r")) == NULL) {
+        perror("Ошибка при открытии файла с данными, проверьте есть ли файл numbers.txt!");
+        return 1;
+    }
+    fscanf(file_numbers, "%d %d\n", &row, &column);
+    printf("Строк: %d Колонок: %d\n", row, column);
 
-        if (estr == NULL) {
-            if (feof(mf) != 0) {
-                printf("\nReading file ended\n");
-                break;
-            } else {
-                printf("\nError reading file\n");
-                break;
-            }
-        }
-        printf("     %s", str);
+    if ((file_result = fopen(filename_result, "w")) == NULL) {
+        perror("Ошибка при открытии/создании файла result.txt!");
+        return 1;
     }
 
-    printf("Closing file");
-    if (fclose(mf) == EOF) printf("Error\n");
-    else printf("Completed\n");
+    float t = 0;
+    for (int j = 0; j < row; j++) {
+        float all[column];
+        float max = -100000;
+        for (int i = 0; i < column; i++) {
+            t = 0;
+            fscanf(file_numbers, "%f", &t);
+            all[i] = t;
+            if (t > max) {
+                max = t;
+            }
+        }
 
-    return 0;
+        for (int i = 0; i < column; i++) {
+            t = 0;
+            all[i] = all[i] / max;
+            fprintf(file_result,"%f ", all[i]);
+        }
+        fprintf(file_result,"\n");
+    }
+    fclose(file_numbers);
+    fclose(file_result);
+    printf("Результат сохранен в %s", filename_result);
 }
