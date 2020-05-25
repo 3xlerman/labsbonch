@@ -2,22 +2,24 @@
 
 typedef double(*function)(double x);
 
-void tab(function f) {
-    for (double i = -1000; i < 1000; i = i + 1) {
-        printf("%lf \n", f(i));
+void tabulation(function f) {
+    for (int i = -10; i < 10; i++) {
+        printf("f(%d)= %lf \n", i, f(i));
     }
 }
 
 double f(double x) {
-    return x * 2;
+    return x * 2 + 1;
 }
 
 double f2(double x) {
-    return x * x;
+    return x * x * x;
 }
 
 int main() {
-    tab(&f);
-    tab(&f2);
+    printf("The 1st function: \n");
+    tabulation(&f);
+    printf("The 2nd function: \n");
+    tabulation(&f2);
 }
 
