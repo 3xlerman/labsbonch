@@ -48,13 +48,13 @@ var (
 func errCheck(err error) bool {
 	if err != nil {
 		if strings.Contains(err.Error(), "expected integer") {
-			fmt.Print("Неверный тип данных")
+			fmt.Println("Неверный тип данных")
 		}
 		if strings.Contains(err.Error(), "value out of range") {
-			fmt.Print("Выход за границы диапазона")
+			fmt.Println("Выход за границы диапазона")
 		}
 		if strings.Contains(err.Error(), "invalid syntax") {
-			fmt.Print("Неверный тип данных")
+			fmt.Println("Неверный тип данных")
 		}
 		return true
 	}
@@ -78,7 +78,7 @@ func inputNumbers() {
 	}
 
 	if lineN < perN {
-		fmt.Print("Система неразрешима")
+		fmt.Println("Система неразрешима")
 		os.Exit(1)
 	}
 
@@ -217,6 +217,6 @@ func main() {
 	// output result and x values
 	fmt.Print("Ф(Х)= ", bound, "\n")
 	for j := 0; j < perN; j++ {
-		fmt.Print("x[", j, "]= ", valuesMin[j])
+		fmt.Println("x[", j, "]= ", valuesMin[j])
 	}
 }
