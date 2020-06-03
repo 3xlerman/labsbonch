@@ -49,33 +49,39 @@ func errCheck(err error) bool {
 	if err != nil {
 		if strings.Contains(err.Error(), "expected integer") {
 			fmt.Println("Неверный тип данных")
+			return true
 		}
 		if strings.Contains(err.Error(), "value out of range") {
 			fmt.Println("Выход за границы диапазона")
+			return true
 		}
 		if strings.Contains(err.Error(), "invalid syntax") {
 			fmt.Println("Неверный тип данных")
+			return true
 		}
-		return true
 	}
 	return false
 }
 
 // const numbers input
 func inputNumbers() {
+	var temp float64
+
 	fmt.Print("Количество строк в системе: ")
-	_, err := fmt.Scan(&lineN)
+	_, err := fmt.Scan(&temp)
 	if errCheck(err) {
-		fmt.Println("\nОшибка в вводе количества строк")
+		fmt.Println("Ошибка в вводе количества строк")
 		os.Exit(1)
 	}
+	lineN = int(temp)
 
 	fmt.Print("Количество переменных в системе: ")
-	_, err = fmt.Scan(&perN)
+	_, err = fmt.Scan(&temp)
 	if errCheck(err) {
 		fmt.Println("Ошибка в вводе количества переменных")
 		os.Exit(1)
 	}
+	perN = int(temp)
 
 	if lineN < perN {
 		fmt.Println("Система неразрешима")
@@ -86,6 +92,7 @@ func inputNumbers() {
 
 // system factors input
 func inputFactors() {
+	var temp float64
 	for i := 0; i < lineN; i++ {
 		fmt.Print("### Строка ", i+1, ": ###\n")
 		for j := 0; j < perN; j++ {
@@ -93,11 +100,12 @@ func inputFactors() {
 			fmt.Print("Переменная x[", j, "]:\n")
 			fmt.Print("Высшая степень x[", j, "]: ")
 
-			_, err := fmt.Scan(&maxP[i][j])
+			_, err := fmt.Scan(&temp)
 			if errCheck(err) {
 				fmt.Println("Ошибка в вводе высшей степени переменной x[", j, "]")
 				os.Exit(1)
 			}
+			maxP[i][j] = int(temp)
 
 			for k := maxP[i][j]; k >= 0; k-- {
 
@@ -187,6 +195,8 @@ func builder(sum float64, bound float64) (result float64, resultMin float64) {
 }
 
 func main() {
+	fmt.Println("\n\n\nРешение системы нелинейных уравнений методом градиентного спуска")
+	fmt.Print("----------------------------------------------------------------\n\n")
 	input()
 	derivative()
 
