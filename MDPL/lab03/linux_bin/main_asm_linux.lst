@@ -1,0 +1,256 @@
+     1                                  ; Assemble:	  nasm -f elf64 -l main_asm_linux.lst  main_asm_linux.asm
+     2                                  ; Link:		  gcc -m64 -o main_asm_linux  main_asm_linux.o
+     3                                  ; Run:		  ./main_asm_linux
+     4                                  
+     5                                  global main
+     6                                  extern printf
+     7                                  extern scanf
+     8                                  extern exit
+     9                                  
+    10                                  segment .data
+    11                                  
+    12 00000000 31207369676E65640D-     	mode_1_str: db "1 signed",0Dh,0Ah,0
+    13 00000009 0A00               
+    14 0000000B 3220756E7369676E65-     	mode_2_str: db "2 unsigned",0Dh,0Ah,0
+    15 00000014 640D0A00           
+    16 00000018 3320657869740D0A00      	mode_3_str: db "3 exit",0Dh,0Ah,0
+    17 00000021 456E746572206E6F64-     	enter_mode_str: db "Enter node: ",0Dh,0Ah,0
+    18 0000002A 653A200D0A00       
+    19                                  
+    20 00000030 256400                  	mode_scanf_str: db "%d",0
+    21 00000033 0000000000000000        	mode: dq 0
+    22                                  
+    23 0000003B 613A2000                	enter_a_str: db "a: ", 0
+    24 0000003F 623A2000                	enter_b_str: db "b: ", 0
+    25                                  	
+    26 00000043 25686400                	enter_sword: db "%hd",0
+    27 00000047 25687500                	enter_uword: db "%hu",0
+    28 0000004B 783A202568640A00        	print_sword: db "x: %hd",10,0
+    29                                  	;print_uword: db "x: %hu",10,0
+    30                                  
+    31 00000053 0000                    	a_sig: dw 0
+    32 00000055 0000                    	b_sig: dw 0
+    33                                  
+    34 00000057 0000                    	a_unsig: dw 0
+    35 00000059 0000                    	b_unsig: dw 0
+    36                                  
+    37 0000005B 0000                    	x_return: dw 0
+    38                                  
+    39                                  segment .text
+    40                                  
+    41                                  main:
+    42 00000000 4883EC28                	sub rsp, 28h		     
+    43                                  					
+    44                                  	@start:
+    45 00000004 4883EC08                	sub rsp, 8               ;теневая область для printf
+    46                                  	
+    47                                  	;1 Знаковый\n
+    48 00000008 48BF-                   	mov rdi, mode_1_str
+    49 0000000A [0000000000000000] 
+    50 00000012 B800000000              	mov rax, 0
+    51 00000017 E8(00000000)            	call printf
+    52                                  
+    53                                  	;2 беззнаковый\n
+    54 0000001C 48BF-                   	mov rdi, mode_2_str
+    55 0000001E [0B00000000000000] 
+    56 00000026 B800000000              	mov rax, 0
+    57 0000002B E8(00000000)            	call printf
+    58                                  
+    59                                  	;3 выход\n
+    60 00000030 48BF-                   	mov rdi, mode_3_str
+    61 00000032 [1800000000000000] 
+    62 0000003A B800000000              	mov rax, 0
+    63 0000003F E8(00000000)            	call printf
+    64                                  	
+    65                                  	;Enter mode
+    66 00000044 48BF-                   	mov rdi, enter_mode_str
+    67 00000046 [2100000000000000] 
+    68 0000004E B800000000              	mov rax, 0
+    69 00000053 E8(00000000)            	call printf
+    70                                  
+    71 00000058 4883C408                	add rsp, 8               ;очвобождение теневой области область для printf
+    72                                  
+    73                                  	;Enter
+    74 0000005C 4883EC10                	sub rsp, 8*2
+    75 00000060 48BF-                   	mov rdi, mode_scanf_str
+    76 00000062 [3000000000000000] 
+    77 0000006A 48BE-                   	mov rsi, mode
+    78 0000006C [3300000000000000] 
+    79 00000074 B800000000              	mov rax, 0
+    80 00000079 E8(00000000)            	call scanf
+    81 0000007E 4883C410                	add rsp, 8*2
+    82                                  
+    83 00000082 B801000000              	mov rax, 1
+    84 00000087 483B0425[33000000]      	cmp rax, [mode]
+    85 0000008F 742B                    	je @m_1
+    86 00000091 B802000000              	mov rax, 2
+    87 00000096 483B0425[33000000]      	cmp rax, [mode]
+    88 0000009E 0F8491000000            	je @m_2
+    89 000000A4 B803000000              	mov rax, 3
+    90 000000A9 483B0425[33000000]      	cmp rax, [mode]
+    91 000000B1 0F84F7000000            	je @next
+    92 000000B7 E948FFFFFF              	jmp @start
+    93                                  	
+    94                                  @m_1:
+    95 000000BC 4883EC10                	sub rsp, 8*2              ;теневая область для printf
+    96                                  	;a: 
+    97 000000C0 48BF-                   	mov rdi, enter_a_str
+    98 000000C2 [3B00000000000000] 
+    99 000000CA E8(00000000)            	call printf
+   100                                  
+   101                                  	;enter a
+   102 000000CF 48BF-                   	mov rdi, enter_sword
+   103 000000D1 [4300000000000000] 
+   104 000000D9 48BE-                   	mov rsi, a_sig
+   105 000000DB [5300000000000000] 
+   106 000000E3 E8(00000000)            	call scanf
+   107                                  
+   108                                  	;b: 
+   109 000000E8 48BF-                   	mov rdi, enter_b_str
+   110 000000EA [3F00000000000000] 
+   111 000000F2 E8(00000000)            	call printf
+   112                                  
+   113                                  	;enter b
+   114 000000F7 48BF-                   	mov rdi, enter_sword
+   115 000000F9 [4300000000000000] 
+   116 00000101 48BE-                   	mov rsi, b_sig
+   117 00000103 [5500000000000000] 
+   118 0000010B E8(00000000)            	call scanf
+   119                                  
+   120 00000110 E8DE000000              	call signedF
+   121                                  	
+   122                                  	;print x
+   123 00000115 48BF-                   	mov rdi, print_sword
+   124 00000117 [4B00000000000000] 
+   125 0000011F 668B3425[5B000000]      	mov si, [x_return]
+   126 00000127 E8(00000000)            	call printf
+   127                                  
+   128 0000012C 4883C410                	add rsp, 8*2
+   129 00000130 E9CFFEFFFF              	jmp @start
+   130                                  @m_2:
+   131 00000135 4883EC10                	sub rsp, 8*2              ;теневая область для printf
+   132                                  	;a: 
+   133 00000139 48BF-                   	mov rdi, enter_a_str
+   134 0000013B [3B00000000000000] 
+   135 00000143 E8(00000000)            	call printf
+   136                                  
+   137                                  	;enter a
+   138 00000148 48BF-                   	mov rdi, enter_uword
+   139 0000014A [4700000000000000] 
+   140 00000152 48BE-                   	mov rsi, a_unsig
+   141 00000154 [5700000000000000] 
+   142 0000015C E8(00000000)            	call scanf
+   143                                  
+   144                                  	;b: 
+   145 00000161 48BF-                   	mov rdi, enter_b_str
+   146 00000163 [3F00000000000000] 
+   147 0000016B E8(00000000)            	call printf
+   148                                  
+   149                                  	;enter b
+   150 00000170 48BF-                   	mov rdi, enter_uword
+   151 00000172 [4700000000000000] 
+   152 0000017A 48BE-                   	mov rsi, b_unsig
+   153 0000017C [5900000000000000] 
+   154 00000184 E8(00000000)            	call scanf
+   155                                  
+   156 00000189 E8B9000000              	call unsignedF
+   157                                  	
+   158                                  	;print x
+   159 0000018E 48BF-                   	mov rdi, print_sword
+   160 00000190 [4B00000000000000] 
+   161 00000198 668B3425[5B000000]      	mov si, [x_return]
+   162 000001A0 E8(00000000)            	call printf
+   163                                  
+   164 000001A5 4883C410                	add rsp, 8*2
+   165 000001A9 E956FEFFFF              	jmp @start
+   166                                  @next:
+   167                                  
+   168                                  
+   169 000001AE BE00000000              	mov esi, 0			   
+   170 000001B3 E8(00000000)            	call exit
+   171 000001B8 C3                      	ret
+   172                                  
+   173                                  ;main ENDP
+   174                                  
+   175                                  ;       signed
+   176                                  ;;;;;;;;;;;;;;;;;;;;;;;;
+   177                                  ;a == b
+   178                                  signed_s1:
+   179 000001B9 66B85800                	mov ax, 88d
+   180 000001BD 66890425[5B000000]      	mov [x_return], ax
+   181 000001C5 C3                      	ret
+   182                                  ;signed_s1 ENDP
+   183                                  
+   184                                  ;a > b
+   185                                  signed_s2:
+   186 000001C6 6683E863                	sub ax, 99d
+   187                                  
+   188 000001CA 6699                    	cwd
+   189 000001CC 66F7FB                  	idiv bx
+   190                                  
+   191 000001CF 66890425[5B000000]      	mov [x_return], ax
+   192 000001D7 C3                      	ret
+   193                                  ;signed_s2 ENDP
+   194                                  
+   195                                  ;a < b
+   196                                  signed_s3:
+   197 000001D8 6631D2                  	xor dx, dx
+   198 000001DB 66B84000                	mov ax, 64d
+   199 000001DF 66F7FB                  	idiv bx
+   200                                  
+   201 000001E2 662B0425[53000000]      	sub ax, [a_sig]
+   202 000001EA 66890425[5B000000]      	mov [x_return], ax
+   203 000001F2 C3                      	ret
+   204                                  ;signed_s3 ENDP
+   205                                  
+   206                                  signedF:
+   207 000001F3 668B0425[53000000]      	mov ax, [a_sig]
+   208 000001FB 668B1C25[55000000]      	mov bx, [b_sig]
+   209                                  
+   210 00000203 6639D8                  	cmp ax, bx
+   211 00000206 74B1                    	je signed_s1 ;ax==bx
+   212 00000208 7FBC                        jg signed_s2 ;ax>bx
+   213 0000020A 7CCC                    	jl signed_s3 ;ax<bx
+   214                                  ;signedF ENDP
+   215                                  
+   216                                  
+   217                                  ;       unsigned
+   218                                  ;;;;;;;;;;;;;;;;;;;;;;;;
+   219                                  ;a == b
+   220                                  unsigned_s1:
+   221 0000020C 66B85800                	mov ax, 88d
+   222 00000210 66890425[5B000000]      	mov [x_return], ax
+   223 00000218 C3                      	ret
+   224                                  ;unsigned_s1 ENDP
+   225                                  
+   226                                  ;a > b
+   227                                  unsigned_s2:
+   228 00000219 6683E863                	sub ax, 99d
+   229                                  
+   230 0000021D 6631D2                  	xor dx, dx
+   231 00000220 66F7FB                  	idiv bx
+   232                                  
+   233 00000223 66890425[5B000000]      	mov [x_return], ax
+   234 0000022B C3                      	ret
+   235                                  ;unsigned_s2 ENDP
+   236                                  
+   237                                  ;a < b
+   238                                  unsigned_s3:
+   239 0000022C 6631D2                  	xor dx, dx
+   240 0000022F 66B84000                	mov ax, 64d
+   241 00000233 66F7FB                  	idiv bx
+   242                                  
+   243 00000236 662B0425[57000000]      	sub ax, [a_unsig]
+   244 0000023E 66890425[5B000000]      	mov [x_return], ax
+   245 00000246 C3                      	ret
+   246                                  ;unsigned_s3 ENDP
+   247                                  
+   248                                  unsignedF:
+   249 00000247 668B0425[57000000]      	mov ax, [a_unsig]
+   250 0000024F 668B1C25[59000000]      	mov bx, [b_unsig]
+   251                                  
+   252 00000257 6639D8                  	cmp ax, bx
+   253 0000025A 74B0                    	je unsigned_s1 ;ax==bx
+   254 0000025C 7FBB                        jg unsigned_s2 ;ax>bx
+   255 0000025E 7CCC                    	jl unsigned_s3 ;ax<bx
+   256                                  ;unsignedF ENDP

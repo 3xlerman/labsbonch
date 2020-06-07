@@ -1,0 +1,8 @@
+﻿  Assembling main_asm.asm...
+  Создание кода
+  0 of 12 functions ( 0.0%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    1 functions had inline decision re-evaluated but remain unchanged
+  Создание кода завершено
+  asm lab 5.vcxproj -> C:\Users\Tima\Desktop\Универ\Информатика\Готовые asm\asm lab 5\bin\asm lab 5.exe
+  asm lab 5.vcxproj -> C:\Users\Tima\Desktop\Универ\Информатика\Готовые asm\asm lab 5\bin\asm lab 5.pdb (Full PDB)

@@ -1,0 +1,10 @@
+﻿  Assembling main_asm.asm...
+  main.cpp
+D:\Files\Tima\Универ\Информатика\Лабы ASM\Алюшин 1\asm lab 4\asm lab 4\main.cpp(44,3): warning C4996: 'scanf': This function or variable may be unsafe. Consider using scanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\Files\Tima\Универ\Информатика\Лабы ASM\Алюшин 1\asm lab 4\asm lab 4\main.cpp(46,3): warning C4996: 'scanf': This function or variable may be unsafe. Consider using scanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  Создание кода
+  7 of 9 functions (77.8%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    0 functions had inline decision re-evaluated but remain unchanged
+  Создание кода завершено
+  asm lab 4.vcxproj -> D:\Files\Tima\Универ\Информатика\Лабы ASM\Алюшин 1\asm lab 4\bin\asm lab 4.exe
