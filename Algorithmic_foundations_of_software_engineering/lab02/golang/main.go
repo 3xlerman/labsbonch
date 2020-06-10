@@ -5,6 +5,7 @@ import (
 	"math"
 	"os"
 	"strings"
+	"time"
 )
 
 const (
@@ -51,17 +52,34 @@ var (
 	isQ int
 
 	tMin float64 = 1.128
+
+	out outputData
 )
+
+type outputData struct {
+	ResultValues [A]float64
+	FuncVal      float64
+	Iterations   int
+	Time         int64
+}
 
 func main() {
 	input()
 	inputValues()
-	gradientDescent()
-	deleteValues()
-	conjugateGradients()
+	fmt.Println("Создаём вторичный поток")
+	chan1 := make(chan outputData, 2)
+
+	go gradientDescent(chan1)
+	fmt.Println("Градиентный спуск:", <-chan1)
+	go conjugateGradients(chan1)
+	fmt.Println("Сопряженные градиенты:", <-chan1)
+
+	time.Sleep(15 * time.Second)
+	fmt.Println("Функция main продолжает работу")
+	fmt.Println("Конец функции main")
 }
 
-func gradientDescent() {
+func gradientDescent(c chan outputData) {
 	fmt.Println("\nРешение системы нелинейных уравнений методом градиентного спуска")
 	fmt.Print("----------------------------------------------------------------\n")
 	derivative()
@@ -69,7 +87,8 @@ func gradientDescent() {
 	step := 0.0001
 
 	fmt.Println("Метод градиентного спуска в процессе...")
-	iter := 0
+	iter := 1
+	t0 := time.Now()
 	for {
 		for j := 0; j < perN; j++ {
 			grad[j] = gradient(0, values[j], j)
@@ -81,10 +100,24 @@ func gradientDescent() {
 		for j := 0; j < perN; j++ {
 			values[j] = values[j] - step*grad[j]/float64(perN)
 		}
-		result, bound := builder(0, bound)
+		result, bound := builder(0)
 		if result > bound {
 			fmt.Println("Градиент не сходится")
 			break
+		}
+		switch iter {
+		case 100:
+			fmt.Println("Произведено", iter, "итераций")
+		case 500:
+			fmt.Println("Произведено", iter, "итераций")
+		case 1000:
+			fmt.Println("Произведено", iter, "итераций")
+		case 5000:
+			fmt.Println("Произведено", iter, "итераций")
+		case 10000:
+			fmt.Println("Произведено", iter, "итераций")
+		case 50000:
+			fmt.Println("Произведено", iter, "итераций")
 		}
 		iter++
 	}
@@ -95,10 +128,12 @@ func gradientDescent() {
 		fmt.Println("x[", j, "]= ", values[j])
 	}
 	fmt.Println("Количество итераций:", iter)
+	fmt.Println("Выполнено за", time.Since(t0))
 	fmt.Println("----------------------------------------------------------------\n")
+	deleteValues()
 }
 
-func conjugateGradients() {
+func conjugateGradients(c chan outputData) {
 	fmt.Println("\nРешение системы нелинейных уравнений методом сопряжённых градиентов")
 	fmt.Print("----------------------------------------------------------------\n")
 	isQ = 0
@@ -107,6 +142,7 @@ func conjugateGradients() {
 		values[j] = initValues[j]
 	}
 	fmt.Println("Метод сопряжённых градиентов в процессе...")
+	t0 := time.Now()
 	for {
 		if iter == 0 {
 			for j := 0; j < perN; j++ {
@@ -159,17 +195,33 @@ func conjugateGradients() {
 				values[j] = values[j] - t*d
 			}
 
+			switch iter {
+			case 100:
+				fmt.Println("Произведено", iter, "итераций")
+			case 500:
+				fmt.Println("Произведено", iter, "итераций")
+			case 1000:
+				fmt.Println("Произведено", iter, "итераций")
+			case 5000:
+				fmt.Println("Произведено", iter, "итераций")
+			case 10000:
+				fmt.Println("Произведено", iter, "итераций")
+			case 50000:
+				fmt.Println("Произведено", iter, "итераций")
+			}
+
 			iter++
 		}
 
 	}
-	_, bound := builder(0, bound)
+	_, bound = builder(0)
 	fmt.Print("Ф(Х)= ", bound, "\n")
 	fmt.Print("Ответ:\n")
 	for j := 0; j < perN; j++ {
 		fmt.Println("x[", j, "]= ", values[j])
 	}
 	fmt.Println("Количество итераций: ", iter)
+	fmt.Println("Выполнено за", time.Since(t0))
 	fmt.Println("----------------------------------------------------------------\n")
 
 }
@@ -177,13 +229,15 @@ func conjugateGradients() {
 func findStep(values [A]float64, grad [A]float64) float64 {
 	min := 1e+308
 	for j := 0; j < perN; j++ {
-		g := 0.0
-		for t := 0.001; t < 1000; t *= 1.1 {
+		for i := 0; i < lineN; i++ {
+			g := 0.0
+			for t := 0.001; t < 1000; t *= 1.1 {
 
-			g = math.Abs(2 * solve(0, values[j]-t*grad[j], F, 0, j, maxP[0][j]) * derivativeValue(0, values[j]-t*grad[j], F, maxP[0][j], 0, j))
-			if g < min {
-				tMin = t
-				break
+				g = math.Abs(2 * solve(0, values[j]-t*grad[j], F, i, j, maxP[i][j]) * derivativeValue(0, values[j]-t*grad[j], F, maxP[i][j], i, j))
+				if g < min {
+					tMin = t
+					break
+				}
 			}
 		}
 	}
@@ -308,8 +362,12 @@ func derivative() {
 
 // create derivative factors of every stroke
 func derivativeValue(sum float64, x float64, mas [L][A][P]float64, power int, i int, j int) float64 {
-	for k := power; k > 0; k-- {
-		sum = sum + float64(k)*mas[i][j][k]*math.Pow(x, float64(power-1))
+	for i := 0; i < lineN; i++ {
+		for j := 0; j < perN; j++ {
+			for k := power; k > 0; k-- {
+				sum = sum + float64(k)*mas[i][j][k]*math.Pow(x, float64(power-1))
+			}
+		}
 	}
 	return sum
 }
@@ -331,7 +389,7 @@ func gradient(sum float64, x float64, j int) float64 {
 }
 
 // final output Ф(x)
-func builder(sum float64, bound float64) (result float64, resultMin float64) {
+func builder(sum float64) (result float64, resultMin float64) {
 	for j := 0; j < perN; j++ {
 		for i := 0; i < lineN; i++ {
 			sum = sum + math.Pow(solve(0, values[j], F, i, j, maxP[i][j]), 2)
