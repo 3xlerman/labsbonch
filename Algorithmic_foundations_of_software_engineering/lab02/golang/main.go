@@ -5,6 +5,7 @@ import (
 	"math"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -57,36 +58,43 @@ var (
 )
 
 type outputData struct {
-	ResultValues [A]float64
+	ResultValues []float64
 	FuncVal      float64
 	Iterations   int
-	Time         int64
+	Time         time.Duration
 }
 
 func main() {
 	input()
 	inputValues()
+
+	wg := new(sync.WaitGroup)
 	fmt.Println("Создаём вторичный поток")
+
 	chan1 := make(chan outputData, 2)
 
-	go gradientDescent(chan1)
+	wg.Add(1)
+	go gradientDescent(chan1, wg)
 	fmt.Println("Градиентный спуск:", <-chan1)
-	go conjugateGradients(chan1)
+
+	wg.Wait()
+
+	wg.Add(1)
+	go conjugateGradients(chan1, wg)
 	fmt.Println("Сопряженные градиенты:", <-chan1)
 
-	time.Sleep(15 * time.Second)
-	fmt.Println("Функция main продолжает работу")
-	fmt.Println("Конец функции main")
+	close(chan1)
 }
 
-func gradientDescent(c chan outputData) {
-	fmt.Println("\nРешение системы нелинейных уравнений методом градиентного спуска")
-	fmt.Print("----------------------------------------------------------------\n")
+func gradientDescent(c chan outputData, wg *sync.WaitGroup) {
+
+	defer wg.Done()
+
+	fmt.Println("Градиентный спуск")
 	derivative()
 	// step of descent
 	step := 0.0001
 
-	fmt.Println("Метод градиентного спуска в процессе...")
 	iter := 1
 	t0 := time.Now()
 	for {
@@ -105,43 +113,35 @@ func gradientDescent(c chan outputData) {
 			fmt.Println("Градиент не сходится")
 			break
 		}
-		switch iter {
-		case 100:
-			fmt.Println("Произведено", iter, "итераций")
-		case 500:
-			fmt.Println("Произведено", iter, "итераций")
-		case 1000:
-			fmt.Println("Произведено", iter, "итераций")
-		case 5000:
-			fmt.Println("Произведено", iter, "итераций")
-		case 10000:
-			fmt.Println("Произведено", iter, "итераций")
-		case 50000:
-			fmt.Println("Произведено", iter, "итераций")
-		}
+
 		iter++
 	}
-	// output result and x values
-	fmt.Print("Ф(Х)= ", bound, "\n")
-	fmt.Print("Ответ:\n")
+
+	outputV := make([]float64, perN)
 	for j := 0; j < perN; j++ {
-		fmt.Println("x[", j, "]= ", values[j])
+		outputV[j] = values[j]
 	}
-	fmt.Println("Количество итераций:", iter)
-	fmt.Println("Выполнено за", time.Since(t0))
-	fmt.Println("----------------------------------------------------------------\n")
+
+	// output result and x values
+	out.FuncVal = bound
+	out.ResultValues = outputV
+	out.Iterations = iter
+	out.Time = time.Since(t0)
 	deleteValues()
+	c <- out
+
 }
 
-func conjugateGradients(c chan outputData) {
-	fmt.Println("\nРешение системы нелинейных уравнений методом сопряжённых градиентов")
-	fmt.Print("----------------------------------------------------------------\n")
+func conjugateGradients(c chan outputData, wg *sync.WaitGroup) {
+
+	defer wg.Done()
+
+	fmt.Println("Сопряжённые градиенты")
 	isQ = 0
 	iter := 0
 	for j := 0; j < perN; j++ {
 		values[j] = initValues[j]
 	}
-	fmt.Println("Метод сопряжённых градиентов в процессе...")
 	t0 := time.Now()
 	for {
 		if iter == 0 {
@@ -195,34 +195,22 @@ func conjugateGradients(c chan outputData) {
 				values[j] = values[j] - t*d
 			}
 
-			switch iter {
-			case 100:
-				fmt.Println("Произведено", iter, "итераций")
-			case 500:
-				fmt.Println("Произведено", iter, "итераций")
-			case 1000:
-				fmt.Println("Произведено", iter, "итераций")
-			case 5000:
-				fmt.Println("Произведено", iter, "итераций")
-			case 10000:
-				fmt.Println("Произведено", iter, "итераций")
-			case 50000:
-				fmt.Println("Произведено", iter, "итераций")
-			}
-
 			iter++
 		}
 
 	}
 	_, bound = builder(0)
-	fmt.Print("Ф(Х)= ", bound, "\n")
-	fmt.Print("Ответ:\n")
+
+	outputV := make([]float64, perN)
 	for j := 0; j < perN; j++ {
-		fmt.Println("x[", j, "]= ", values[j])
+		outputV[j] = values[j]
 	}
-	fmt.Println("Количество итераций: ", iter)
-	fmt.Println("Выполнено за", time.Since(t0))
-	fmt.Println("----------------------------------------------------------------\n")
+
+	out.FuncVal = bound
+	out.ResultValues = outputV
+	out.Iterations = iter
+	out.Time = time.Since(t0)
+	c <- out
 
 }
 
